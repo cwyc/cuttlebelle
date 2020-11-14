@@ -17,7 +17,5 @@ tests/*/site2/*
 tests/*/docs/*
 tests/*/docs2/*
 _fixture
-dist/*
 coverage/*
 tests/*/docs/*
-man/cuttlebelle.1
