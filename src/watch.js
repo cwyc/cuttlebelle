@@ -63,6 +63,7 @@ export const Watch = {
 		browsersync.watch([ // watch all content and src files
 			Path.normalize(`${ SETTINGS.get().folder.content }/**/*.yml`),
 			Path.normalize(`${ SETTINGS.get().folder.content }/**/*.md`),
+			Path.normalize(`${ SETTINGS.get().folder.content }/**/*.html`),
 			Path.normalize(`${ SETTINGS.get().folder.code }/**/*.js`),
 			Path.normalize(`${ SETTINGS.get().folder.assets }/**/*`),
 		], {

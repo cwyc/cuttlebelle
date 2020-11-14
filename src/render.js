@@ -410,38 +410,40 @@ export const RenderPartial = ( partial, file, parent, path, rendered, iterator =
 		}
 		const partialPath = Path.normalize(`${ cwd }/${ partial }`);
 
-		if( partial.endsWith('.md') && Fs.existsSync( partialPath ) ) { // only if the string ends with ".md" and the corresponding file exists
+		if( (partial.endsWith('.md') || partial.endsWith('.html')) && Fs.existsSync( partialPath ) ) { // only if the string ends with ".md" and the corresponding file exists
 			Log.verbose(`Partial ${ Style.yellow( partial ) } found`);
 
 			const ID = partialPath.replace( SETTINGS.get().folder.content, '' )
 			const filePath = Path.normalize(`${ SETTINGS.get().folder.content }/${ ID }`);
 
-			process.nextTick(() =>
-				ReadFile( filePath )
-					.catch( error => {
-						Log.error(`Generating partial failed in ${ Style.yellow( partial ) }`)
-						reject( error );
-					})
-					.then( content => RenderFile(
-							content,
-							filePath.replace( SETTINGS.get().folder.content, '' ),
-							parent,
-							rendered,
-							iterator
-						)
-						.catch( reason => reject( reason ) )
-					)
-					.then( HTML => {
-						const ID = `cuttlebelleID${ Slug( partial ) }-${ iterator }`; // We generate a unique ID for react
+			const handleError = error => {
+				Log.error(`Generating partial failed in ${ Style.yellow( partial ) }`)
+				reject( error );
+			}
+			
+			const renderMD = content => RenderFile(
+				content,
+				filePath.replace( SETTINGS.get().folder.content, '' ),
+				parent,
+				rendered,
+				iterator
+			).catch( reason => reject( reason ) )
+			
+			const reactWrapper = HTML => {
+				const ID = `cuttlebelleID${ Slug( partial ) }-${ iterator }`; // We generate a unique ID for react
 
-						Log.verbose(`Rendering partial ${ Style.yellow( partial ) } complete with ID ${ Style.yellow( ID ) }`);
+				Log.verbose(`Rendering partial ${ Style.yellow( partial ) } complete with ID ${ Style.yellow( ID ) }`);
 
-						resolve({                                                     // to resolve we need to keep track of the path of where this partial was mentioned
-							path: path,
-							partial: <cuttlebellesillywrapper key={ ID } dangerouslySetInnerHTML={ { __html: HTML } } />,
-						});
-				})
-			);
+				resolve({                                                     // to resolve we need to keep track of the path of where this partial was mentioned
+					path: path,
+					partial: <cuttlebellesillywrapper key={ ID } dangerouslySetInnerHTML={ { __html: HTML } } />,
+				});
+			}
+			
+			if(partial.endsWith('.md'))
+				process.nextTick(() => ReadFile( filePath ).catch(handleError).then(renderMD).then(reactWrapper));
+			else
+				process.nextTick(() => ReadFile( filePath ).catch(handleError).then(reactWrapper));
 		}
 		else {
 			resolve( partial );                                                 // looks like the string wasn’t a partial so we just return it unchanged
